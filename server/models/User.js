@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema(
     },
     img: {
       type: String,
-      required: true, // Ensures an image is always uploaded
+      required: true,
     },
     password: {
       type: String,
@@ -22,8 +22,36 @@ const UserSchema = new mongoose.Schema(
     age: {
       type: Number,
     },
+    height: {
+      type: Number, // in meters
+      required: true,
+    },
+    weight: {
+      type: Number, // in kilograms
+      required: true,
+    },
+    bmi: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );
+
+// Middleware to calculate BMI before saving
+UserSchema.pre('save', function (next) {
+  if (this.height && this.weight) {
+    this.bmi = parseFloat((this.weight / (this.height ** 2)).toFixed(2));
+  }
+  next();
+});
+
+// Middleware to calculate BMI before updates
+UserSchema.pre('findOneAndUpdate', function (next) {
+  const update = this.getUpdate();
+  if (update.height && update.weight) {
+    update.bmi = parseFloat((update.weight / (update.height ** 2)).toFixed(2));
+  }
+  next();
+});
 
 export default mongoose.model("User", UserSchema);

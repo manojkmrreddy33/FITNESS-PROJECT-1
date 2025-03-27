@@ -4,8 +4,18 @@ import dotenv from "dotenv";
 import { createError } from "../error.js";
 import User from "../models/User.js";
 import Workout from "../models/Workout.js";
+import cloudinary from 'cloudinary';
 
 dotenv.config();
+
+
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET,
+// });
+
+
 
 export const UserRegister = async (req, res, next) => {
   try {
@@ -14,27 +24,37 @@ export const UserRegister = async (req, res, next) => {
     // Check if email is already registered
     const existingUser = await User.findOne({ email }).exec();
     if (existingUser) {
-      return next(createError(409, "Email is already in use."));
+      return next(createError(409, 'Email is already in use.'));
     }
 
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
+    let imageUrl = 'BSD';
+
+    // if (img) {
+    //   const uploadResult = await cloudinary.v2.uploader.upload(img, {
+    //     folder: 'user-profiles',
+    //   });
+    //   imageUrl = uploadResult.secure_url;
+    // }
+
     const user = new User({
       name,
       email,
       password: hashedPassword,
-      img, // Store the image URL
+      img: imageUrl, // Store the uploaded image URL
     });
 
     const createdUser = await user.save();
-    const token = jwt.sign({ id: createdUser._id }, process.env.JWT, { expiresIn: "30d" });
+    const token = jwt.sign({ id: createdUser._id }, process.env.JWT, { expiresIn: '30d' });
 
     return res.status(200).json({ token, user });
   } catch (error) {
     return next(error);
   }
 };
+
 
 export const UserLogin = async (req, res, next) => {
   try {
