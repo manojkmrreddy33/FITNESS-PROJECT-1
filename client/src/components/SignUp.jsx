@@ -12,18 +12,38 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 40px;
+  background: ${({ theme }) => theme.background_secondary};
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 `;
 
-const Title = styled.div`
-  font-size: 30px;
+const Title = styled.h1`
+  font-size: 32px;
   font-weight: 800;
   color: ${({ theme }) => theme.text_primary};
 `;
 
-const Span = styled.div`
+const Span = styled.span`
   font-size: 16px;
   font-weight: 400;
-  color: ${({ theme }) => theme.text_secondary + 90};
+  color: ${({ theme }) => theme.text_secondary};
+`;
+
+const ImagePreview = styled.img`
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid ${({ theme }) => theme.primary};
+`;
+
+const FileInput = styled.input`
+  padding: 12px;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 8px;
+  background-color: ${({ theme }) => theme.background_primary};
+  cursor: pointer;
 `;
 
 const SignUp = () => {
@@ -95,18 +115,13 @@ const SignUp = () => {
         <Title>Create New Account 👋</Title>
         <Span>Please enter details to create a new account</Span>
       </div>
-      <div style={{ display: "flex", gap: "20px", flexDirection: "column" }}>
-        <TextInput label="Full name" placeholder="Enter your full name" value={name} handelChange={(e) => setName(e.target.value)} />
-        <TextInput label="Email Address" placeholder="Enter your email address" value={email} handelChange={(e) => setEmail(e.target.value)} />
-        <TextInput label="Password" placeholder="Enter your password" password value={password} handelChange={(e) => setPassword(e.target.value)} />
-        
-        {/* Image Upload Input */}
-        <input type="file" accept="image/*" onChange={handleImageUpload} disabled={imageUploading} />
-        {imageUploading && <Span>Uploading image...</Span>}
-        {imageUrl && <img src={imageUrl} alt="Profile Preview" style={{ width: "100px", height: "100px", borderRadius: "50%" }} />}
-
-        <Button text="Sign Up" onClick={handleSignUp} isLoading={loading} isDisabled={buttonDisabled || imageUploading} />
-      </div>
+      <TextInput label="Full Name" placeholder="Enter your full name" value={name} handelChange={(e) => setName(e.target.value)} />
+      <TextInput label="Email Address" placeholder="Enter your email address" value={email} handelChange={(e) => setEmail(e.target.value)} />
+      <TextInput label="Password" placeholder="Enter your password" password value={password} handelChange={(e) => setPassword(e.target.value)} />
+      <FileInput type="file" accept="image/*" onChange={handleImageUpload} disabled={imageUploading} />
+      {imageUploading && <Span>Uploading image...</Span>}
+      {imageUrl && <ImagePreview src={imageUrl} alt="Profile Preview" />}
+      <Button text="Sign Up" onClick={handleSignUp} isLoading={loading} isDisabled={buttonDisabled || imageUploading} />
     </Container>
   );
 };
