@@ -1,23 +1,20 @@
 import jwt from "jsonwebtoken";
 import { createError } from "../error.js";
 
-export const verifyToken = async (req, res, next) => {
-  try {
-    if (!req.headers.authorization) {
-      return next(createError(401, "You are not authenticated!"));
-    }
+export const verifyToken = (req, res, next) => {
+  const token = req.cookies.access_token;
 
-    const token = req.headers.authorization.split(" ")[1];
-    console.log(token);
-
-    if (!token) return next(createError(401, "You are not authenticated"));
-
-    const decode = jwt.verify(token, process.env.JWT);
-    req.user = decode;
-    return next();
-  } catch (err) {
-    next(err);
+  if (!token) {
+    console.log("token not found")
+    return res.status(401).json({ message: 'Not authenticated' });
   }
+
+  jwt.verify(token, process.env.JWT, (err, user) => {
+    if (err) return res.status(403).json({ message: 'Token is not valid' });
+    req.user = user;
+    next();
+  });
 };
+
 
 export default verifyToken;

@@ -23,16 +23,18 @@ const UserSchema = new mongoose.Schema(
       type: Number,
     },
     height: {
-      type: Number, // in meters
-      required: true,
+      type: Number ,
     },
     weight: {
-      type: Number, // in kilograms
-      required: true,
+      type: Number, 
     },
     bmi: {
-      type: Number,
+      type: Number ,
     },
+    achievements: {
+      type: String, // could be a file URL, or JSON string if it's complex
+    }
+    
   },
   { timestamps: true }
 );

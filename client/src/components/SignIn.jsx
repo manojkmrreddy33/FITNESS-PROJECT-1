@@ -45,13 +45,14 @@ const SignIn = () => {
     if (validateInputs()) {
       await UserSignIn({ email, password })
         .then((res) => {
+          console.log(res)
           dispatch(loginSuccess(res.data));
           alert("Login Success");
           setLoading(false);
           setButtonDisabled(false);
         })
         .catch((err) => {
-          alert(err.response.data.message);
+          alert(err);
           setLoading(false);
           setButtonDisabled(false);
         });

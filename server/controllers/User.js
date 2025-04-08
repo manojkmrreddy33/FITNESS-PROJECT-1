@@ -8,20 +8,17 @@ import cloudinary from 'cloudinary';
 
 dotenv.config();
 
-
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-// });
-
+cloudinary.config({
+  cloud_name: "doql04ndg",
+  api_key: "321443127871819",
+  api_secret: "bbC9wa4-laeD9a2Te7GQxqgCV3s", 
+});
 
 
 export const UserRegister = async (req, res, next) => {
   try {
     const { email, password, name, img } = req.body;
 
-    // Check if email is already registered
     const existingUser = await User.findOne({ email }).exec();
     if (existingUser) {
       return next(createError(409, 'Email is already in use.'));
@@ -30,26 +27,26 @@ export const UserRegister = async (req, res, next) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    let imageUrl = 'BSD';
-
-    // if (img) {
-    //   const uploadResult = await cloudinary.v2.uploader.upload(img, {
-    //     folder: 'user-profiles',
-    //   });
-    //   imageUrl = uploadResult.secure_url;
-    // }
+    let imageUrl = 'Not_found'; 
 
     const user = new User({
       name,
       email,
       password: hashedPassword,
-      img: imageUrl, // Store the uploaded image URL
+      img: imageUrl,
     });
 
     const createdUser = await user.save();
     const token = jwt.sign({ id: createdUser._id }, process.env.JWT, { expiresIn: '30d' });
 
-    return res.status(200).json({ token, user });
+    res.cookies('access_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    return res.status(200).json({ user });
   } catch (error) {
     return next(error);
   }
@@ -59,24 +56,53 @@ export const UserRegister = async (req, res, next) => {
 export const UserLogin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    const user = await User.findOne({ email: email });
-    // Check if user exists
+    if(!email & !password){
+    const { email, password } = req.query;
+    const user = await User.findOne({ email });
     if (!user) {
-      return next(createError(404, "User not found"));
+      return next(createError(404, 'User not found'));
     }
-    console.log(user);
-    // Check if password is correct
-    const isPasswordCorrect = await bcrypt.compareSync(password, user.password);
+
+    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
     if (!isPasswordCorrect) {
-      return next(createError(403, "Incorrect password"));
+      return next(createError(403, 'Incorrect password'));
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT, {
-      expiresIn: "30d",
+      expiresIn: '30d',
     });
 
-    return res.status(200).json({ token, user });
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    return res.status(200).json({ user });
+
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(createError(404, 'User not found'));
+    }
+
+    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
+    if (!isPasswordCorrect) {
+      return next(createError(403, 'Incorrect password'));
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT, {
+      expiresIn: '30d',
+    });
+
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    return res.status(200).json({ user });
   } catch (error) {
     return next(error);
   }
@@ -329,4 +355,70 @@ const calculateCaloriesBurnt = (workoutDetails) => {
   const weightInKg = parseInt(workoutDetails.weight);
   const caloriesBurntPerMinute = 1.5; // Sample value
   return durationInMinutes * caloriesBurntPerMinute * weightInKg;
+};
+
+
+export const getUserDetails = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return next(createError(401, "Unauthorized"));
+    }
+
+    const user = await User.findById(userId).select("-password"); // omit password
+
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return next(createError(401, "Unauthorized"));
+
+    const { name, email, age, height, weight } = req.body;
+    const files = req.files;
+
+    let updatedFields = {
+      name,
+      email,
+    };
+
+    // Only add numeric fields if they're valid numbers
+    if (age && age !== "null") updatedFields.age = Number(age);
+    if (height && height !== "null") updatedFields.height = Number(height);
+    if (weight && weight !== "null") updatedFields.weight = Number(weight);
+
+    // Upload profile photo
+    if (files?.img) {
+      const result = await cloudinary.v2.uploader.upload(files.img.tempFilePath, {
+        folder: "user-profiles",
+      });
+      updatedFields.img = result.secure_url;
+    }
+
+    // Upload achievements file
+    if (files?.achievements) {
+      const achievementResult = await cloudinary.v2.uploader.upload(files.achievements.tempFilePath, {
+        folder: "user_achievements",
+      });
+      updatedFields.achievements = achievementResult.secure_url;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updatedFields, {
+      new: true,
+    }).select("-password");
+
+    return res.status(200).json(updatedUser);
+  } catch (err) {
+    console.error("Update Error:", err);
+    next(err);
+  }
 };
