@@ -1,14 +1,34 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import styled from "styled-components";
+import axios from "axios";
 import { getUserDetails, UserUpdate } from "../api";
-
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 2rem;
   padding: 2rem;
+  justify-content: center;
+`;
+
+const LeftSide = styled.div`
+  flex: 1;
+  max-width: 400px;
+`;
+
+const RightSide = styled.div`
+  flex: 2;
+  min-width: 300px;
 `;
 
 const ProfileCard = styled.div`
@@ -17,8 +37,6 @@ const ProfileCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: relative;
-  max-width: 400px;
-  width: 100%;
 `;
 
 const EditButton = styled.button`
@@ -58,7 +76,7 @@ const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -117,13 +135,85 @@ const AchievementFile = styled.a`
   text-decoration: underline;
 `;
 
+const ChartBox = styled.div`
+  width: 100%;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 16px rgba(59, 130, 246, 0.6);
+`;
+
 const Profile = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({});
   const [file, setFile] = useState(null);
   const [achievementFile, setAchievementFile] = useState(null);
   const [previewImg, setPreviewImg] = useState(null);
+
+  const [currentWeight, setCurrentWeight] = useState("");
+  const [squat, setSquat] = useState("");
+  const [bench, setBench] = useState("");
+  const [deadlift, setDeadlift] = useState("");
+  const [progressData, setProgressData] = useState([]);
+
+  const [bmiMessage, setBmiMessage] = useState("");
+
+  useEffect(() => {
+    fetchProgress();
+  }, []);
+
+  const fetchProgress = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/profile");
+      setProgressData(res.data);
+    } catch (error) {
+      console.error("Error fetching progress:", error);
+    }
+  };
+
+  const handleProgressSubmit = async (e) => {
+    e.preventDefault();
+    if (!profile || !profile.height) {
+      alert("User height not available for BMI calculation.");
+      return;
+    }
+
+    // Convert height from meters to centimeters
+    const heightInCm = parseFloat(profile.height) * 100;
+    const weightInKg = parseFloat(currentWeight);
+
+    // Calculate BMI
+    const bmiValue = (weightInKg / ((heightInCm / 100) * (heightInCm / 100))).toFixed(2);
+    setBmiMessage(getBmiMessage(bmiValue));
+
+    const newEntry = {
+      currentWeight,
+      squat,
+      bench,
+      deadlift,
+      bmi: bmiValue,
+    };
+
+    try {
+      await axios.post("http://localhost:8080/api/profile", newEntry);
+      fetchProgress();
+      setShowProgressModal(false);
+    } catch (error) {
+      console.error("Error saving progress:", error);
+    }
+  };
+
+  const getBmiMessage = (bmi) => {
+    if (bmi < 18.5) {
+      return "You are underweight";
+    } else if (bmi >= 18.5 && bmi < 24.9) {
+      return "You are fit";
+    } else {
+      return "You are overweight";
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -176,25 +266,53 @@ const Profile = () => {
 
   return (
     <Container>
-      <ProfileCard>
-        <EditButton onClick={() => setShowModal(true)}>✏️</EditButton>
-        <Avatar src={profile.img || "https://via.placeholder.com/100"} />
-        <Name>{profile.name}</Name>
-        <Info>📧 {profile.email}</Info>
-        <Info>🎂 Age: {profile.age}</Info>
-        <Info>📏 Height: {profile.height} m</Info>
-        <Info>⚖️ Weight: {profile.weight} kg</Info>
-        <Info>🧮 BMI: {profile.bmi}</Info>
-        {profile.achievements && (
-          <>
-            <Label>🏆 Achievements</Label>
-            <AchievementFile href={profile.achievements} target="_blank">
-              View Uploaded Achievement
-            </AchievementFile>
-          </>
-        )}
-      </ProfileCard>
+      {/* LEFT SIDE - PROFILE */}
+      <LeftSide>
+        <ProfileCard>
+          <EditButton onClick={() => setShowModal(true)}>✏️</EditButton>
+          <Avatar src={profile.img || "https://via.placeholder.com/100"} />
+          <Name>{profile.name}</Name>
+          <Info>📧 {profile.email}</Info>
+          <Info>🎂 Age: {profile.age}</Info>
+          <Info>📏 Height: {profile.height} m</Info>
+          <Info>⚖️ Weight: {profile.weight} kg</Info>
+          <Info>🧮 BMI: {profile.bmi}</Info>
+          <Info>{bmiMessage}</Info> {/* Display BMI message */}
+          {profile.achievements && (
+            <>
+              <Label>🏆 Achievements</Label>
+              <AchievementFile href={profile.achievements} target="_blank">
+                View Uploaded Achievement
+              </AchievementFile>
+            </>
+          )}
+          <UpdateButton style={{ marginTop: "20px" }} onClick={() => setShowProgressModal(true)}>
+            Update Progress
+          </UpdateButton>
+        </ProfileCard>
+      </LeftSide>
 
+      {/* RIGHT SIDE - CHART */}
+      <RightSide>
+        <ChartBox>
+          <h2>Progress Chart</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={progressData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="createdAt" tickFormatter={(tick) => tick.slice(0, 10)} />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="squat" stroke="#3B82F6" name="Squat" />
+              <Line type="monotone" dataKey="bench" stroke="#10B981" name="Bench" />
+              <Line type="monotone" dataKey="deadlift" stroke="#EF4444" name="Deadlift" />
+              <Line type="monotone" dataKey="bmi" stroke="#F59E0B" name="BMI" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartBox>
+      </RightSide>
+
+      {/* PROFILE EDIT MODAL */}
       {showModal && (
         <ModalOverlay>
           <Modal>
@@ -205,15 +323,47 @@ const Profile = () => {
             <Input type="number" name="age" value={formData.age || ""} onChange={handleChange} placeholder="Age" />
             <Input type="number" name="height" value={formData.height || ""} onChange={handleChange} placeholder="Height (in meters)" />
             <Input type="number" name="weight" value={formData.weight || ""} onChange={handleChange} placeholder="Weight (in kg)" />
-            
             <Label>Update Profile Photo</Label>
             <Input type="file" name="img" onChange={handleChange} />
             {previewImg && <PreviewImage src={previewImg} alt="Preview" />}
-
             <Label>Upload Achievement</Label>
             <Input type="file" name="achievements" onChange={handleChange} />
-
             <UpdateButton onClick={handleUpdate}>Update</UpdateButton>
+          </Modal>
+        </ModalOverlay>
+      )}
+
+      {/* PROGRESS UPDATE MODAL */}
+      {showProgressModal && (
+        <ModalOverlay>
+          <Modal>
+            <CloseButton onClick={() => setShowProgressModal(false)}>×</CloseButton>
+            <h2>Update Progress</h2>
+            <Input
+              type="number"
+              value={currentWeight}
+              placeholder="Current Weight"
+              onChange={(e) => setCurrentWeight(e.target.value)}
+            />
+            <Input
+              type="number"
+              value={squat}
+              placeholder="Squat (kg)"
+              onChange={(e) => setSquat(e.target.value)}
+            />
+            <Input
+              type="number"
+              value={bench}
+              placeholder="Bench (kg)"
+              onChange={(e) => setBench(e.target.value)}
+            />
+            <Input
+              type="number"
+              value={deadlift}
+              placeholder="Deadlift (kg)"
+              onChange={(e) => setDeadlift(e.target.value)}
+            />
+            <UpdateButton onClick={handleProgressSubmit}>Submit</UpdateButton>
           </Modal>
         </ModalOverlay>
       )}
