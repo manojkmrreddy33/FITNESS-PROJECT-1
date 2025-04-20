@@ -56,38 +56,10 @@ const SignUp = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "fitnessapp");
-      formData.append("cloud_name", "dnf7gyrb1");
-
-      try {
-        const response = await fetch("https://api.cloudinary.com/v1_1/dnf7gyrb1/image/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await response.json();
-        setImageUrl(data.secure_url);
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        alert("Failed to upload image. Please try again.");
-      } finally {
-        setImageUploading(false);
-      }
-    }
-  };
 
   const validateInputs = () => {
     if (!name || !email || !password) {
       alert("Please fill in all fields.");
-      return false;
-    }
-    if (!imageUrl) {
-      alert("Please upload an image before signing up.");
       return false;
     }
     return true;
@@ -98,7 +70,7 @@ const SignUp = () => {
     setLoading(true);
     setButtonDisabled(true);
     try {
-      const res = await UserSignUp({ name, email, password, img: imageUrl });
+      const res = await UserSignUp({ name, email, password, img: "none"});
       dispatch(loginSuccess(res.data));
       alert("Account Created Successfully");
     } catch (err) {

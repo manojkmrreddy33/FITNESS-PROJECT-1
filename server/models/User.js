@@ -24,11 +24,9 @@ const UserSchema = new mongoose.Schema(
     },
     height: {
       type: Number, // in meters
-      required: true,
     },
     weight: {
       type: Number, // in kilograms
-      required: true,
     },
     bmi: {
       type: Number,
