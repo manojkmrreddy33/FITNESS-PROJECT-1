@@ -90,9 +90,6 @@ const SignUp = () => {
       <TextInput label="Full Name" placeholder="Enter your full name" value={name} handelChange={(e) => setName(e.target.value)} />
       <TextInput label="Email Address" placeholder="Enter your email address" value={email} handelChange={(e) => setEmail(e.target.value)} />
       <TextInput label="Password" placeholder="Enter your password" password value={password} handelChange={(e) => setPassword(e.target.value)} />
-      <FileInput type="file" accept="image/*" onChange={handleImageUpload} disabled={imageUploading} />
-      {imageUploading && <Span>Uploading image...</Span>}
-      {imageUrl && <ImagePreview src={imageUrl} alt="Profile Preview" />}
       <Button text="Sign Up" onClick={handleSignUp} isLoading={loading} isDisabled={buttonDisabled || imageUploading} />
     </Container>
   );
