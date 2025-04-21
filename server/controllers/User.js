@@ -39,7 +39,7 @@ export const UserRegister = async (req, res, next) => {
     const createdUser = await user.save();
     const token = jwt.sign({ id: createdUser._id }, process.env.JWT, { expiresIn: '30d' });
 
-    res.cookies('access_token', token, {
+    res.cookie('access_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', 
       sameSite: 'strict',
@@ -251,7 +251,7 @@ export const getWorkoutsByDate = async (req, res, next) => {
     );
 
     const todaysWorkouts = await Workout.find({
-      userId: userId,
+      user: userId,
       date: { $gte: startOfDay, $lt: endOfDay },
     });
     const totalCaloriesBurnt = todaysWorkouts.reduce(

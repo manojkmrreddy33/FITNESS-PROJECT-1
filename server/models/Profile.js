@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const ProfileSchema = new mongoose.Schema({
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
   currentWeight: Number,
   squat: Number,
   bench: Number,
