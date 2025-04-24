@@ -7,6 +7,7 @@ import { DateCalendar } from "@mui/x-date-pickers";
 import { getWorkouts } from "../api";
 import { CircularProgress, Button, Select, MenuItem } from "@mui/material";
 import { useDispatch } from "react-redux";
+import axios from "axios";
 
 const Container = styled.div` flex: 1; height: 100%; display: flex; justify-content: center; padding: 22px 0px; overflow-y: scroll; `;
 const Wrapper = styled.div` flex: 1; max-width: 1600px; display: flex; gap: 22px; padding: 0px 16px; `;
@@ -66,6 +67,18 @@ const Workouts = () => {
     });
   };
 
+  const handleDeleteWorkout = async (id) => {
+    try {
+      console.log(id)
+      await axios.delete(`http://localhost:8080/api/workouts/${id}`, {
+        withCredentials: true
+      });
+      setTodaysWorkouts((prev) => prev.filter((workout) => workout._id !== id));
+    } catch (err) {
+      console.error("Failed to delete workout", err);
+    }
+  };
+
   useEffect(() => { getTodaysWorkout(); }, [date]);
 
   return (
@@ -106,7 +119,7 @@ const Workouts = () => {
             {loading ? <CircularProgress /> : (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
                 {todaysWorkouts.map((workout) => (
-                  <WorkoutCard key={workout.id} workout={workout} />
+                  <WorkoutCard key={workout.id} onDelete={handleDeleteWorkout} workout={workout} />
                 ))}
               </div>
             )}

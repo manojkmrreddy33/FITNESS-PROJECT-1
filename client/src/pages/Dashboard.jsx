@@ -7,6 +7,7 @@ import CategoryChart from "../components/cards/CategoryChart";
 import AddWorkout from "../components/AddWorkout";
 import WorkoutCard from "../components/cards/WorkoutCard";
 import { addWorkout, getDashboardDetails, getWorkouts } from "../api";
+import axios from "axios";
 
 const Container = styled.div`
   flex: 1;
@@ -106,6 +107,17 @@ const Dashboard = () => {
         alert(err);
       });
   };
+    const handleDeleteWorkout = async (id) => {
+      try {
+        console.log(id)
+        await axios.delete(`http://localhost:8080/api/workouts/${id}`, {
+          withCredentials: true
+        });
+        setTodaysWorkouts((prev) => prev.filter((workout) => workout._id !== id));
+      } catch (err) {
+        console.error("Failed to delete workout", err);
+      }
+    };
 
   useEffect(() => {
     dashboardData();
@@ -136,7 +148,7 @@ const Dashboard = () => {
           <Title>Todays Workouts</Title>
           <CardWrapper>
             {todaysWorkouts.map((workout) => (
-              <WorkoutCard workout={workout} />
+              <WorkoutCard workout={workout} onDelete={handleDeleteWorkout} />
             ))}
           </CardWrapper>
         </Section>

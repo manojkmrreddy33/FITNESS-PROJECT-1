@@ -1,8 +1,11 @@
 import { FitnessCenterRounded, TimelapseRounded } from "@mui/icons-material";
 import React from "react";
 import styled from "styled-components";
+import { MdDelete as Delete } from "react-icons/md";
+import { IconButton } from "@mui/material"; // Import IconButton from MUI
 
 const Card = styled.div`
+  position: relative; /* important for absolute positioning */
   flex: 1;
   min-width: 250px;
   max-width: 400px;
@@ -13,10 +16,20 @@ const Card = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  background: ${({ theme }) => theme.bg}; /* optional */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add smooth transitions */
+  
+  /* Hover effect */
+  &:hover {
+    transform: scale(1.05); /* Slightly enlarge the card */
+    box-shadow: 2px 8px 25px 0px ${({ theme }) => theme.primary + 25}; /* More intense shadow */
+  }
+
   @media (max-width: 600px) {
     padding: 12px 14px;
   }
 `;
+
 const Category = styled.div`
   width: fit-content;
   font-size: 14px;
@@ -26,11 +39,14 @@ const Category = styled.div`
   padding: 4px 10px;
   border-radius: 8px;
 `;
+
 const Name = styled.div`
   font-size: 20px;
   color: ${({ theme }) => theme.text_primary};
   font-weight: 600;
+  margin-top: 12px; /* space below delete button */
 `;
+
 const Sets = styled.div`
   font-size: 15px;
   color: ${({ theme }) => theme.text_secondary};
@@ -38,10 +54,12 @@ const Sets = styled.div`
   display: flex;
   gap: 6px;
 `;
+
 const Flex = styled.div`
   display: flex;
   gap: 16px;
 `;
+
 const Details = styled.div`
   font-size: 15px;
   color: ${({ theme }) => theme.text_primary};
@@ -51,9 +69,16 @@ const Details = styled.div`
   gap: 6px;
 `;
 
-const WorkoutCard = ({ workout }) => {
+const WorkoutCard = ({ workout, onDelete }) => {
   return (
     <Card>
+      <IconButton 
+        color="error" 
+        onClick={() => onDelete(workout._id)} 
+        style={{ position: "absolute", top: "6px", right: "6px", zIndex: 10 }}
+      >
+        <Delete />
+      </IconButton>
       <Category>#{workout?.category}</Category>
       <Name>{workout?.workoutName}</Name>
       <Sets>

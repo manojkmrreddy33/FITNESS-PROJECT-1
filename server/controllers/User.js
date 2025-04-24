@@ -391,10 +391,9 @@ export const updateUserProfile = async (req, res, next) => {
       email,
     };
 
-    // Only add numeric fields if they're valid numbers
-    if (age && age !== "null") updatedFields.age = Number(age);
-    if (height && height !== "null") updatedFields.height = Number(height);
-    if (weight && weight !== "null") updatedFields.weight = Number(weight);
+    if (!updatedFields.age && age !== "null") updatedFields.age = Number(age);
+    if (updatedFields.height && height !== "null") updatedFields.height = Number(height);
+    if (updatedFields.weight && weight !== "null") updatedFields.weight = Number(weight);
 
     // Upload profile photo
     if (files?.img) {
@@ -420,5 +419,27 @@ export const updateUserProfile = async (req, res, next) => {
   } catch (err) {
     console.error("Update Error:", err);
     next(err);
+  }
+};
+
+export const deleteWorkout = async (req, res) => {
+  const workoutId = req.params.id;
+  const userId = req.user.id;
+
+  console.log("workoutId",workoutId,"userId",userId)
+
+  try {
+    const workout = await Workout.findOne({ _id: workoutId, userId });
+
+    if (!workout) {
+      return res.status(404).json({ message: "Workout not found or unauthorized." });
+    }
+
+    await Workout.deleteOne({ _id: workoutId });
+
+    res.status(200).json({ message: "Workout deleted successfully." });
+  } catch (err) {
+    console.error("Delete workout error:", err);
+    res.status(500).json({ message: "Server error while deleting workout." });
   }
 };

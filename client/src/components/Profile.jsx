@@ -310,7 +310,7 @@ const Profile = () => {
               <Line type="monotone" dataKey="squat" stroke="#3B82F6" name="Squat" />
               <Line type="monotone" dataKey="bench" stroke="#10B981" name="Bench" />
               <Line type="monotone" dataKey="deadlift" stroke="#EF4444" name="Deadlift" />
-              <Line type="monotone" dataKey="bmi" stroke="#F59E0B" name="BMI" />
+              <Line type="monotone" dataKey="currentWeight" stroke="#EF4444" name="Body Weight (kg)" />
             </LineChart>
           </ResponsiveContainer>
         </ChartBox>
