@@ -166,7 +166,9 @@ const Profile = () => {
 
   const fetchProgress = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/profile");
+      const res = await axios.get("http://localhost:8080/api/profile",{
+        withCredentials: true
+      });
       setProgressData(res.data);
     } catch (error) {
       console.error("Error fetching progress:", error);
@@ -197,7 +199,9 @@ const Profile = () => {
     };
 
     try {
-      await axios.post("http://localhost:8080/api/profile", newEntry);
+      await axios.post("http://localhost:8080/api/profile", newEntry,{
+        withCredentials: true
+      });
       fetchProgress();
       setShowProgressModal(false);
     } catch (error) {

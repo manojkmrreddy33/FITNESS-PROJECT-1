@@ -8,24 +8,27 @@ const router = express.Router();
 router.post("/", verifyToken,async (req, res) => {
   try {
     const userId = await req.user?.id;
+    console.log(userId)
     const { currentWeight, squat, bench, deadlift } = req.body;
     const newProfile = new Profile({ userId, currentWeight, squat, bench, deadlift });
     console.log(newProfile)
     await newProfile.save();
     res.status(201).json({ message: "Progress saved!", profile: newProfile });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Error saving data", error });
   }
 });
 
 // Get all progress records
-router.get("/", async (req, res) => {
+router.get("/", verifyToken, async (req, res) => {
   try {
     const userId = await req.user?.id;
-    console.log(req)
     const profiles = await Profile.find({ userId }).sort({ createdAt: -1 });
+    // console.log(profiles)
     res.json(profiles);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Error fetching data", error });
   }
 });
