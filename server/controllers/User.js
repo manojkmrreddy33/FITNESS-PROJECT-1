@@ -390,11 +390,10 @@ export const updateUserProfile = async (req, res, next) => {
       name,
       email,
     };
-
-    if (!updatedFields.age && age !== "null") updatedFields.age = Number(age);
-    if (updatedFields.height && height !== "null") updatedFields.height = Number(height);
-    if (updatedFields.weight && weight !== "null") updatedFields.weight = Number(weight);
-
+    if (age !== undefined && age !== null && age !== "null") updatedFields.age = Number(age);
+    if (height !== undefined && height !== null && height !== "null") updatedFields.height = Number(height);
+    if (weight !== undefined && weight !== null && weight !== "null") updatedFields.weight = Number(weight);
+    
     // Upload profile photo
     if (files?.img) {
       const result = await cloudinary.v2.uploader.upload(files.img.tempFilePath, {
